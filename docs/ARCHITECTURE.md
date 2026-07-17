@@ -33,18 +33,14 @@ looks rich or cheap versus realized vol.
 
 ## Build plan
 
-This was built in four deliberate milestones, each reviewed before moving
-to the next. The milestone history is preserved here (and in detail in
-[DEVLOG.md](DEVLOG.md)) because *how* it was built is part of the point of
-this project — going straight to a framework would have hidden a lot of
-the actual engineering decisions below.
+Built in four deliberate milestones, each completed and verified before
+moving to the next, rather than scaffolding the whole system up front.
 
 ### Milestone 1 — Vol math, no framework
 Hand-written functions (`src/vol_surface_agent/tools/options.py`): fetch
 an options chain, price with Black-Scholes, solve implied vol via Brent's
-method. No agent loop — the goal was to understand exactly what the tool
-does before any framework wraps it, and to shake out real data-quality
-bugs (see DEVLOG) before they're hidden behind an LLM's tool-calling.
+method. No agent loop — this establishes correct, independently-tested
+vol math before any framework or LLM sits on top of it.
 **Status: done.**
 
 ### Milestone 2 — LangChain tools + `create_agent`
@@ -73,10 +69,12 @@ diagnosed via a LangSmith trace. **Status: not started.**
 
 - **Flat risk-free rate**, not a full treasury curve — standard practice
   for near-dated single-name options. What matters is using it correctly
-  (forward price `F = S*e^((r-q)T)`), not how precisely it's sourced.
+  (forward price $F = Se^{(r-q)T}$), not how precisely it's sourced.
 - **Dividend yield derived from `dividendRate / spot`**, not yfinance's
   `dividendYield` field directly — that field's units aren't stable
-  across yfinance versions. See DEVLOG for the bug this caused.
+  across yfinance versions, and a naive read of it produces a
+  systematically wrong forward price. Verified via put-call parity
+  (`tests/test_options.py::test_put_call_parity_holds_at_a_given_vol`).
 - **Implied vol solved via Brent's method** (`scipy.optimize.brentq`),
   not bisection — faster convergence, still guaranteed to find a root
   when one exists in the bracket. Returns `None` (not an exception) when

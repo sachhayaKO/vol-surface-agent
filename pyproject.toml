@@ -12,6 +12,17 @@ dependencies = [
     "numpy",
     "scipy",
     "pandas",
+    "langchain",
+    "langchain-core",
+    "langgraph",
+    "langchain-anthropic",
+    "langchain-chroma",
+    "chromadb",
+    "langchain-huggingface",
+    "sentence-transformers",
+    "requests",
+    "beautifulsoup4",
+    "lxml",
 ]
 
 [project.optional-dependencies]

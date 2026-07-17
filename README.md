@@ -15,9 +15,7 @@ reasoning behind that tradeoff.
 Early — the vol math foundation (options chain retrieval, Black-Scholes,
 implied vol) is built and tested. The agent layer, retrieval, and eval
 suite are not yet built. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-for the build plan and current status of each piece, and
-[docs/DEVLOG.md](docs/DEVLOG.md) for a running account of what was built,
-why, and bugs found along the way.
+for the build plan and current status of each piece.
 
 ## Setup
 
@@ -51,5 +49,5 @@ src/vol_surface_agent/
 scripts/       manual run/demo entrypoints
 tests/         unit tests
 evals/         golden dataset + scoring scripts (not yet built)
-docs/          architecture, build plan, dev log
+docs/          architecture and build plan
 ```
