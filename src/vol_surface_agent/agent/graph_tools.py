@@ -1,37 +1,48 @@
 """
-LangChain @tool wrappers around the pure functions in options.py and
-realized_vol.py. Kept as thin wrappers on purpose: the math lives in
-tools that have no framework dependency and can be tested/called
-directly (see tests/), and this module's only job is turning that
-output into something an LLM can read and deciding what each tool's
-docstring tells the model about when to call it.
+Milestone 3 tool variants: same tools as tools/langchain_tools.py, same
+docstrings (the model's view of when/how to call them doesn't change),
+but failures raise typed errors (see agent/errors.py) instead of being
+caught and turned into a friendly string.
+
+This is the deliberate difference from Milestone 2: create_agent has no
+way to branch graph execution on *why* a tool failed, so Milestone 2's
+tools swallow errors and let the model react to error text in prose.
+The custom StateGraph in agent/graph.py *can* branch explicitly, so
+these tools let it — errors propagate up to execute_tool, which
+classifies and routes on them as real state, not prose the model has to
+interpret consistently on its own.
 """
 
-from langchain_chroma import Chroma
-from langchain_core.tools import tool
-from langchain_huggingface import HuggingFaceEmbeddings
+from typing import NoReturn
 
-from vol_surface_agent.ingestion.build_index import EMBEDDING_MODEL, PERSIST_DIR
+from langchain_core.tools import tool
+
+from vol_surface_agent.agent.errors import ApiFailureError, BadTickerError, EmptyDataError
 from vol_surface_agent.tools.formatting import format_filing_results, format_iv_surface, format_realized_vol
+from vol_surface_agent.tools.langchain_tools import _get_retriever_store
 from vol_surface_agent.tools.options import compute_iv_for_chain, fetch_option_chain, pick_expiry_near
 from vol_surface_agent.tools.realized_vol import compute_realized_vol
 
-# Loaded lazily (only when the retriever tool is actually called), since
-# instantiating the embedding model has real startup cost and the other
-# two tools don't need it at all.
-_retriever_store: Chroma | None = None
 
+def _raise_typed(e: Exception) -> NoReturn:
+    """
+    Classify a caught exception into one of the typed errors in
+    agent/errors.py and raise it.
 
-def _get_retriever_store() -> Chroma:
-    global _retriever_store
-    if _retriever_store is None:
-        embeddings = HuggingFaceEmbeddings(model_name=EMBEDDING_MODEL)
-        _retriever_store = Chroma(
-            persist_directory=PERSIST_DIR,
-            embedding_function=embeddings,
-            collection_name="earnings_10k",
-        )
-    return _retriever_store
+    A ValueError from fetch_option_chain/fetch_price_history almost
+    always means a bad/unsupported ticker (see their error messages in
+    tools/options.py and tools/realized_vol.py) — except the specific
+    "empty option chain" case, which means the ticker is fine but this
+    particular expiry/query returned nothing. Anything else (network
+    errors, unexpected failures) is treated as a transient API failure,
+    since "retry" is the safest default reaction to an error this code
+    didn't specifically anticipate.
+    """
+    if isinstance(e, ValueError):
+        if "empty option chain" in str(e):
+            raise EmptyDataError(str(e)) from e
+        raise BadTickerError(str(e)) from e
+    raise ApiFailureError(str(e)) from e
 
 
 @tool
@@ -52,15 +63,17 @@ def get_implied_vol_surface(ticker: str) -> str:
     try:
         expiry = pick_expiry_near(ticker)
         chain = fetch_option_chain(ticker, expiry=expiry)
-    except ValueError as e:
-        return f"Could not fetch options data for {ticker}: {e}"
+    except Exception as e:
+        _raise_typed(e)
 
     chain_iv = compute_iv_for_chain(chain)
     spot = chain["underlying_price"].iloc[0]
     tte_days = round(chain["time_to_expiry"].iloc[0] * 365)
 
     formatted = format_iv_surface(chain_iv, ticker, expiry, spot, tte_days)
-    return formatted or f"No solvable near-the-money implied vols for {ticker} {expiry}."
+    if formatted is None:
+        raise EmptyDataError(f"No solvable near-the-money implied vols for {ticker} {expiry}.")
+    return formatted
 
 
 @tool
@@ -81,8 +94,8 @@ def get_realized_vol(ticker: str) -> str:
     """
     try:
         result = compute_realized_vol(ticker)
-    except ValueError as e:
-        return f"Could not compute realized vol for {ticker}: {e}"
+    except Exception as e:
+        _raise_typed(e)
 
     return format_realized_vol(ticker, result)
 
@@ -107,10 +120,16 @@ def search_earnings_and_filings(query: str, ticker: str | None = None) -> str:
     """
     store = _get_retriever_store()
     filter_ = {"ticker": ticker.upper()} if ticker else None
-    results = store.similarity_search(query, k=4, filter=filter_)
+    try:
+        results = store.similarity_search(query, k=4, filter=filter_)
+    except Exception as e:
+        raise ApiFailureError(str(e)) from e
 
     formatted = format_filing_results(results, ticker)
     if formatted is None:
         scope = f" for {ticker}" if ticker else ""
-        return f"No matching filing text found{scope}. Coverage is limited to AAPL and NVDA."
+        raise EmptyDataError(f"No matching filing text found{scope}.")
     return formatted
+
+
+GRAPH_TOOLS = [get_implied_vol_surface, get_realized_vol, search_earnings_and_filings]
