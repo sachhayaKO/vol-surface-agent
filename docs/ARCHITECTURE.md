@@ -48,7 +48,7 @@ Wrap Milestone 1 logic as LangChain tools (`@tool` decorator, clear
 docstrings for tool selection), add a realized-vol tool and a retriever
 tool over a small Chroma store of earnings call / 10-K text ingested from
 SEC EDGAR. Wire into `create_agent` with an `InMemorySaver` checkpointer
-and a `thread_id` for multi-turn state. **Status: not started.**
+and a `thread_id` for multi-turn state. **Status: done.**
 
 ### Milestone 3 — Custom LangGraph state machine
 Rebuild the agent as an explicit `StateGraph`: a reasoning node, a
@@ -56,7 +56,7 @@ tool-execution node, conditional routing on whether more data is needed.
 Explicit state transitions (not silent failures) for: a failed API call,
 a bad/missing ticker, a tool returning empty data, and malformed tool
 args from the model. Same checkpointer, so state survives a crash
-mid-run. **Status: not started.**
+mid-run. **Status: done.**
 
 ### Milestone 4 — Evals and observability
 A golden dataset of 30-50 questions with known-correct or known-range
@@ -84,3 +84,12 @@ diagnosed via a LangSmith trace. **Status: not started.**
   yfinance equity chains are American-style; the gap is small for
   non-dividend payers and short-dated contracts, larger for dividend
   payers near ex-div and deep ITM puts. Accepted, documented tradeoff.
+- **Local embeddings (`sentence-transformers`) for the retriever**, not
+  a hosted embeddings API — keeps the whole project on a single LLM
+  provider instead of needing a second API key/vendor just for
+  embeddings.
+- **Typed exceptions for tool failures in Milestone 3**
+  (`agent/errors.py`), not string-matching on error messages — lets the
+  graph route on `error_type` as real state, versus Milestone 2's tools,
+  which catch failures internally and return a friendly string for the
+  model to interpret in prose.
