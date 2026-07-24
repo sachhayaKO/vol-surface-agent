@@ -1,0 +1,303 @@
+[
+  {
+    "id": "iv-01",
+    "category": "implied_vol_retrieval",
+    "turns": ["What's AAPL's implied vol surface look like?"],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface"],
+      "expected_args": {"get_implied_vol_surface": {"ticker": "AAPL"}},
+      "required_keywords_any": ["%", "IV", "implied vol"]
+    },
+    "judge_rubric": "Does the answer report specific implied vol percentages near the money for AAPL, not just a vague qualitative statement like 'vol looks normal'?"
+  },
+  {
+    "id": "iv-02",
+    "category": "implied_vol_retrieval",
+    "turns": ["Show me NVDA's options market right now."],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface"],
+      "expected_args": {"get_implied_vol_surface": {"ticker": "NVDA"}},
+      "required_keywords_any": ["%", "IV", "implied vol"]
+    },
+    "judge_rubric": "Does the answer describe NVDA's current options/implied-vol picture with specific numbers rather than generic commentary?"
+  },
+  {
+    "id": "iv-03",
+    "category": "implied_vol_retrieval",
+    "turns": ["What's the skew look like for SPY options?"],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface"],
+      "expected_args": {"get_implied_vol_surface": {"ticker": "SPY"}},
+      "required_keywords_any": ["skew", "put", "call"]
+    },
+    "judge_rubric": "Does the answer explain the shape of SPY's skew (e.g. puts vs calls, downside vs upside), not just report a single number?"
+  },
+  {
+    "id": "rv-01",
+    "category": "realized_vol_retrieval",
+    "turns": ["What's AAPL's realized vol been recently?"],
+    "checks": {
+      "expected_tools": ["get_realized_vol"],
+      "expected_args": {"get_realized_vol": {"ticker": "AAPL"}},
+      "required_keywords_any": ["%", "realized"]
+    },
+    "judge_rubric": "Does the answer cite a specific realized vol figure and window (e.g. '20-day'), not just a vague description?"
+  },
+  {
+    "id": "rv-02",
+    "category": "realized_vol_retrieval",
+    "turns": ["How volatile has NVDA actually been over the last 20 days?"],
+    "checks": {
+      "expected_tools": ["get_realized_vol"],
+      "expected_args": {"get_realized_vol": {"ticker": "NVDA"}},
+      "required_keywords_any": ["20-day", "20 day"]
+    },
+    "judge_rubric": "Does the answer specifically address the 20-day window the user asked about, not just report an unrelated window?"
+  },
+  {
+    "id": "rv-03",
+    "category": "realized_vol_retrieval",
+    "turns": ["Compare SPY's close-to-close vs Parkinson realized vol."],
+    "checks": {
+      "expected_tools": ["get_realized_vol"],
+      "expected_args": {"get_realized_vol": {"ticker": "SPY"}},
+      "required_keywords_any": ["close-to-close", "close to close"]
+    },
+    "judge_rubric": "Does the answer explicitly compare the two estimators (close-to-close and Parkinson) rather than only reporting one?"
+  },
+  {
+    "id": "rich-cheap-01",
+    "category": "rich_cheap_synthesis",
+    "turns": ["Is AAPL's vol rich or cheap right now?"],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface", "get_realized_vol"],
+      "expected_args": {"get_implied_vol_surface": {"ticker": "AAPL"}, "get_realized_vol": {"ticker": "AAPL"}},
+      "required_keywords_any": ["rich", "cheap", "premium", "elevated", "in line"]
+    },
+    "judge_rubric": "Does the answer directly compare specific implied vol and realized vol numbers to reach a rich/cheap conclusion, rather than answering vaguely?"
+  },
+  {
+    "id": "rich-cheap-02",
+    "category": "rich_cheap_synthesis",
+    "turns": ["Does NVDA's options market look overpriced relative to how it's actually traded?"],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface", "get_realized_vol"],
+      "expected_args": {"get_implied_vol_surface": {"ticker": "NVDA"}, "get_realized_vol": {"ticker": "NVDA"}}
+    },
+    "judge_rubric": "Does the answer ground its rich/cheap conclusion in specific IV vs RV numbers for NVDA?"
+  },
+  {
+    "id": "rich-cheap-03",
+    "category": "rich_cheap_synthesis",
+    "turns": ["Is SPY's implied vol elevated relative to its recent realized vol?"],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface", "get_realized_vol"],
+      "expected_args": {"get_implied_vol_surface": {"ticker": "SPY"}, "get_realized_vol": {"ticker": "SPY"}}
+    },
+    "judge_rubric": "Does the answer note that a persistent IV-over-RV premium is normal for index products (structural hedging demand), not automatically a mispricing signal?"
+  },
+  {
+    "id": "rich-cheap-04",
+    "category": "rich_cheap_synthesis",
+    "turns": ["Which looks richer right now, AAPL or NVDA vol?"],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface", "get_realized_vol"],
+      "max_tool_calls": 8
+    },
+    "judge_rubric": "Does the answer compare both AAPL and NVDA using actual numbers for each, and give a clear comparative conclusion?"
+  },
+  {
+    "id": "rich-cheap-05",
+    "category": "rich_cheap_synthesis",
+    "turns": ["Give me a quick vol read on SPY vs its recent history."],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface", "get_realized_vol"],
+      "expected_args": {"get_implied_vol_surface": {"ticker": "SPY"}}
+    },
+    "judge_rubric": "Does the answer connect SPY's current implied vol to its recent realized vol history, not just report one in isolation?"
+  },
+  {
+    "id": "filings-01",
+    "category": "filings_grounding",
+    "turns": ["Why might AAPL's vol be elevated -- anything in their filings?"],
+    "checks": {
+      "expected_tools": ["search_earnings_and_filings"],
+      "required_keywords_any": ["risk", "filing", "10-K", "earnings"]
+    },
+    "judge_rubric": "Does the answer cite something specific from AAPL's actual filings (not a generic guess) as a possible explanation?"
+  },
+  {
+    "id": "filings-02",
+    "category": "filings_grounding",
+    "turns": ["What risks did NVDA flag in their last 10-K?"],
+    "checks": {
+      "expected_tools": ["search_earnings_and_filings"],
+      "expected_args": {"search_earnings_and_filings": {"ticker": "NVDA"}}
+    },
+    "judge_rubric": "Does the answer report specific, real risk factors from NVDA's 10-K rather than generic boilerplate about business risk?"
+  },
+  {
+    "id": "filings-03",
+    "category": "filings_grounding",
+    "turns": ["What did AAPL report in their latest earnings?"],
+    "checks": {
+      "expected_tools": ["search_earnings_and_filings"],
+      "expected_args": {"search_earnings_and_filings": {"ticker": "AAPL"}}
+    },
+    "judge_rubric": "Does the answer report specific figures/highlights from AAPL's actual latest earnings release, not vague commentary?"
+  },
+  {
+    "id": "multiturn-01",
+    "category": "multi_turn_context",
+    "turns": ["What's AAPL's implied vol?", "How does that compare to realized?"],
+    "checks": {
+      "expected_tools": ["get_realized_vol"],
+      "expected_args": {"get_realized_vol": {"ticker": "AAPL"}},
+      "forbidden_keywords": ["which ticker", "which stock", "what ticker"]
+    },
+    "judge_rubric": "Does turn 2 correctly resolve 'that' as AAPL's implied vol from turn 1, without asking the user to repeat the ticker?"
+  },
+  {
+    "id": "multiturn-02",
+    "category": "multi_turn_context",
+    "turns": ["Tell me about NVDA's realized vol.", "Is that rich or cheap compared to implied?"],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface"],
+      "expected_args": {"get_implied_vol_surface": {"ticker": "NVDA"}},
+      "forbidden_keywords": ["which ticker", "which stock", "what ticker"]
+    },
+    "judge_rubric": "Does turn 2 correctly stay on NVDA (from turn 1) without re-asking which ticker, and reach a rich/cheap conclusion?"
+  },
+  {
+    "id": "scope-01",
+    "category": "out_of_scope_tickers",
+    "turns": ["What's TSLA's implied vol?"],
+    "checks": {
+      "expected_tools": [],
+      "required_keywords_any": ["don't have", "not supported", "outside", "coverage", "AAPL, SPY", "AAPL, NVDA", "limited to", "isn't something i can", "can't look up", "can't provide", "unable to", "not a real", "doesn't appear to be"]
+    },
+    "judge_rubric": "Does the answer clearly decline TSLA as out of scope instead of fabricating or actually fetching data for it?"
+  },
+  {
+    "id": "scope-02",
+    "category": "out_of_scope_tickers",
+    "turns": ["Pull up implied vol for GOOGL."],
+    "checks": {
+      "expected_tools": [],
+      "required_keywords_any": ["don't have", "not supported", "outside", "coverage", "AAPL, SPY", "AAPL, NVDA", "limited to", "isn't something i can", "can't look up", "can't provide", "unable to", "not a real", "doesn't appear to be"]
+    },
+    "judge_rubric": "Does the answer clearly decline GOOGL as out of scope rather than guessing at a number?"
+  },
+  {
+    "id": "scope-03",
+    "category": "out_of_scope_tickers",
+    "turns": ["What's MSFT's realized vol?"],
+    "checks": {
+      "expected_tools": [],
+      "required_keywords_any": ["don't have", "not supported", "outside", "coverage", "AAPL, SPY", "AAPL, NVDA", "limited to", "isn't something i can", "can't look up", "can't provide", "unable to", "not a real", "doesn't appear to be"]
+    },
+    "judge_rubric": "Does the answer clearly decline MSFT as out of scope rather than guessing at a number?"
+  },
+  {
+    "id": "spy-gap-01",
+    "category": "spy_filings_gap",
+    "turns": ["What did SPY report in their last earnings call?"],
+    "checks": {
+      "required_keywords_any": ["ETF", "doesn't file", "does not file", "no filings", "index", "not a company", "doesn't hold earnings", "doesn't have a 10-k", "no 10-k"]
+    },
+    "judge_rubric": "Does the answer correctly explain SPY is an ETF with no earnings calls/10-Ks of its own, rather than fabricating an answer?"
+  },
+  {
+    "id": "spy-gap-02",
+    "category": "spy_filings_gap",
+    "turns": ["What risks does SPY flag in its 10-K?"],
+    "checks": {
+      "required_keywords_any": ["ETF", "doesn't file", "does not file", "no filings", "index", "not a company", "doesn't hold earnings", "doesn't have a 10-k", "no 10-k"]
+    },
+    "judge_rubric": "Does the answer correctly explain SPY has no 10-K of its own, rather than fabricating risk factors?"
+  },
+  {
+    "id": "ambiguous-01",
+    "category": "ambiguous_questions",
+    "turns": ["Is vol cheap right now?"],
+    "checks": {
+      "expected_tools": [],
+      "required_keywords_any": ["which ticker", "which stock", "clarify", "AAPL, SPY", "specify", "which one", "let me know which"]
+    },
+    "judge_rubric": "Does the answer ask which ticker the user means instead of guessing one on its own?"
+  },
+  {
+    "id": "ambiguous-02",
+    "category": "ambiguous_questions",
+    "turns": ["How does it compare to realized?"],
+    "checks": {
+      "expected_tools": [],
+      "required_keywords_any": ["which ticker", "which stock", "clarify", "context", "specify", "which one", "let me know which", "compare to what"]
+    },
+    "judge_rubric": "Since this is the first message in a fresh conversation with no prior 'it' to refer to, does the answer ask for clarification instead of guessing what 'it' means?"
+  },
+  {
+    "id": "error-01",
+    "category": "error_path_stress",
+    "turns": ["What's the realized vol for ZZZFAKETICKER?"],
+    "checks": {
+      "forbidden_keywords": ["% annualized", "close-to-close: "],
+      "required_keywords_any": ["don't have", "not supported", "couldn't", "invalid", "not a valid", "not recognize", "isn't something i can", "can't look up", "doesn't appear to be", "not a real", "not a tradable"]
+    },
+    "judge_rubric": "Does the answer decline or explain the failure plainly for this fake ticker, without fabricating a realized vol number?"
+  },
+  {
+    "id": "error-02",
+    "category": "error_path_stress",
+    "turns": ["Show me implied vol for a ticker called ABCXYZNOTREAL123."],
+    "checks": {
+      "required_keywords_any": ["don't have", "not supported", "couldn't", "invalid", "not a valid", "not recognize", "isn't something i can", "can't look up", "doesn't appear to be", "not a real", "not a tradable"]
+    },
+    "judge_rubric": "Does the answer decline or explain the failure plainly for this fake ticker, without fabricating an IV surface?"
+  },
+  {
+    "id": "error-03",
+    "category": "error_path_stress",
+    "turns": ["Show me vol for ticker: 12345"],
+    "checks": {
+      "required_keywords_any": ["don't have", "not supported", "couldn't", "invalid", "not a valid", "not a ticker", "clarify", "isn't something i can", "can't look up", "doesn't appear to be", "not a real"]
+    },
+    "judge_rubric": "Does the answer recognize '12345' isn't a valid ticker and ask for clarification or decline, rather than attempting to fetch data?"
+  },
+  {
+    "id": "error-04",
+    "category": "error_path_stress",
+    "turns": ["What's the implied vol for FAKETICKER999?"],
+    "checks": {
+      "required_keywords_any": ["don't have", "not supported", "couldn't", "invalid", "not a valid", "not recognize", "isn't something i can", "can't look up", "doesn't appear to be", "not a real", "not a tradable"]
+    },
+    "judge_rubric": "Does the answer decline or explain the failure plainly for this fake ticker, without fabricating data?"
+  },
+  {
+    "id": "synthesis-01",
+    "category": "cross_tool_synthesis",
+    "turns": ["Does AAPL's put skew make sense given what's in their filings?"],
+    "checks": {
+      "expected_tools": ["get_implied_vol_surface", "search_earnings_and_filings"]
+    },
+    "judge_rubric": "Does the answer connect a specific filing-based risk to the shape of AAPL's put skew, rather than discussing the two topics separately?"
+  },
+  {
+    "id": "synthesis-02",
+    "category": "cross_tool_synthesis",
+    "turns": ["Is NVDA's elevated vol justified by anything in their recent filings?"],
+    "checks": {
+      "expected_tools": ["search_earnings_and_filings"]
+    },
+    "judge_rubric": "Does the answer reference specific NVDA filing content to support or challenge whether current vol is justified?"
+  },
+  {
+    "id": "synthesis-03",
+    "category": "cross_tool_synthesis",
+    "turns": ["Connect AAPL's realized vol pattern to any recent news in their filings."],
+    "checks": {
+      "expected_tools": ["get_realized_vol", "search_earnings_and_filings"]
+    },
+    "judge_rubric": "Does the answer link a specific realized-vol observation (e.g. a spike/gap) to specific filing content, rather than listing the two independently?"
+  }
+]

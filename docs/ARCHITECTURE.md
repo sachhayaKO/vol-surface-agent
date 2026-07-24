@@ -63,7 +63,10 @@ A golden dataset of 30-50 questions with known-correct or known-range
 answers, scored with both LLM-as-judge and deterministic checks (right
 tool called, number in the right ballpark). LangSmith tracing across
 every agent turn. A documented, deliberately-induced failure mode
-diagnosed via a LangSmith trace. **Status: not started.**
+diagnosed via a LangSmith trace. **Status: in progress** — golden
+dataset (30 questions, `evals/golden_dataset.json`) and scoring harness
+(`evals/run_eval.py`) built and passing. LangSmith tracing and the
+induced-failure walkthrough are blocked on a `LANGSMITH_API_KEY`.
 
 ## Key design decisions
 
@@ -93,3 +96,8 @@ diagnosed via a LangSmith trace. **Status: not started.**
   graph route on `error_type` as real state, versus Milestone 2's tools,
   which catch failures internally and return a friendly string for the
   model to interpret in prose.
+- **The eval judge is given the actual retrieved tool output**, not just
+  the final answer — a judge without that evidence can't distinguish
+  "specific and accurate" from "specific and fabricated," and for a
+  live-data agent will misjudge current dates/figures as implausible
+  since they postdate its own training data.
